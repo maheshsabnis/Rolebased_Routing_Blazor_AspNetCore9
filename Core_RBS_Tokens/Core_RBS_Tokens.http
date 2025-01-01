@@ -1,0 +1,6 @@
+@Core_RBS_Tokens_HostAddress = http://localhost:5062
+
+GET {{Core_RBS_Tokens_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

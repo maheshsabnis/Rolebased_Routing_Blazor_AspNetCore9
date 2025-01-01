@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core_RBS_Tokens", "Core_RBS_Tokens\Core_RBS_Tokens.csproj", "{F9613632-A9CA-44D6-89BA-B98A950D96E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9613632-A9CA-44D6-89BA-B98A950D96E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9613632-A9CA-44D6-89BA-B98A950D96E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9613632-A9CA-44D6-89BA-B98A950D96E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9613632-A9CA-44D6-89BA-B98A950D96E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
