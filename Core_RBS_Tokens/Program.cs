@@ -222,8 +222,6 @@ void GetRequestInfo(HttpRequest request, SecurityServices serv, out string userN
 {
     var headers = request.Headers["Authorization"];
     var receivedToken = headers[0].Split(" ");
-    //userName = serv.GetUserFromTokenAsync(receivedToken[1]).Result;
-    //roleName = serv.GetRoleFormToken(receivedToken[1]);
 
     var authDetails =  serv.GetUserNameAndRoleFromToken(request.HttpContext);
     userName = authDetails[0];

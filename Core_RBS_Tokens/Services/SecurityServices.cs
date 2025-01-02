@@ -132,19 +132,14 @@ namespace Core_RBS_Tokens.Services
                     }
                     else
                     {
-                        // Paramater 1: Login EMail
-                        // Parameter 2: PAssword
-                        // Parameter 3: Creaing Persistent Cookie on Browser, set it to false for API
-                        // Parameter 4: Invalid login attempts will lock the user from login (5 attempts default)
+                        
                         var authStatus = await _signInManager.PasswordSignInAsync(user.Email, user.Password, false, lockoutOnFailure: true);
 
                         if (authStatus.Succeeded)
                         {
-                            /*
-                               Logic to Generate Token
-                             */
+                            
                             #region Logic for Generating Token
-                            //3b Read the secret key and the expiration from the configuration 
+                            
                             var secretKeyString = _config["JWTCoreSettings:SecretKey"];
                             if (string.IsNullOrEmpty(secretKeyString))
                             {
@@ -154,18 +149,14 @@ namespace Core_RBS_Tokens.Services
                             }
                             var secretKey = Convert.FromBase64String(secretKeyString);
                             var expiryTimeSpan = Convert.ToInt32(_config["JWTCoreSettings:ExpiryInMinuts"]);
-                            //3c. logic to get the user role
-                            // get the user object based on Email
+                             
 
                             IdentityUser usr = new IdentityUser(user.Email);
-                                 //3d set the expiry, subject, etc.
-                            // note that Issuer and Audience will be null because 
-                            // there is no third-party issuer
+                                
                             
                             var claims = new[]
                                     {
-                                        //new Claim("username", usr.Id.ToString()),
-                                        //new Claim("rolename",roles[0])
+                                        
                                         new Claim(ClaimTypes.Name, usr.UserName),
                                         new Claim(ClaimTypes.Role, roles[0])
                                     };
@@ -303,46 +294,7 @@ namespace Core_RBS_Tokens.Services
             return users;
         }
 
-           /// <summary>
-        /// Thie method willaccept the token as inout parameter and wil receive token from it
-        /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        //public async Task<string> GetUserFromTokenAsync(string token)
-        //{
-        //    string userName = "";
-        //    var jwtHandler = new JwtSecurityTokenHandler();
-        //    // read the token values
-        //    var jwtSecurityToken = jwtHandler.ReadJwtToken(token);
-        //    // read claims
-        //    var claims = jwtSecurityToken.Claims;
-        //    // read first claim
-        //    var userIdClaim = claims.First();
-        //    // read the user Id
-        //    var userId = userIdClaim.Value;
-        //    // get the username from the userid
-        //    var identityUser = await _userManager.FindByIdAsync(userId);
-        //    userName = identityUser.UserName;
-        //    return userName;
-        //}
-
-        //public string GetRoleFormToken(string token)
-        //{
-        //    string roleName = "";
-        //    var jwtHandler = new JwtSecurityTokenHandler();
-        //    // read the token values
-        //    var jwtSecurityToken = jwtHandler.ReadJwtToken(token);
-        //    // read claims
-        //    var claims = jwtSecurityToken.Claims;
-        //    // read first two claim
-        //    var roleClaim = claims.Take(2);
-        //    // read the role
-        //    var roleRecord = roleClaim.Last();
-        //    // read the role name
-        //    roleName = roleRecord.Value;
-        //    return roleName;
-        //}
-
+          
         public string[] GetUserNameAndRoleFromToken(HttpContext httpContext)
         {
             string[] data = new string[2];
