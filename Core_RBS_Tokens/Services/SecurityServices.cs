@@ -6,6 +6,10 @@ using System.Security.Claims;
 
 namespace Core_RBS_Tokens.Services
 {
+    /// <summary>
+    /// This class is used to create Users and Roles and manage Authentication using the Token
+    /// After Generating Toking
+    /// </summary>
     public class SecurityServices
     {
          /// <summary>
@@ -188,6 +192,7 @@ namespace Core_RBS_Tokens.Services
 
                             response.StatucCode = 200;
                             response.RoleName = role[0];
+                            response.UserName = user.Email;
                             response.Message = $"User {user.Email} Logged in successfuly";
                            }
                             
@@ -280,6 +285,30 @@ namespace Core_RBS_Tokens.Services
             return response;
         }
 
+
+
+
+        public async Task<List<RoleData>> GetRolesAsync()
+        {
+            List<RoleData> roles = new List<RoleData>();
+            roles = await Task.Run(() => (from r in _roleManager.Roles.ToList()
+                                          select new RoleData()
+                                          {
+                                              RoleName = r.Name,
+                                          }).ToList());
+            return roles;
+        }
+
+        public async Task<List<Users>> GetUsersAsync()
+        {
+            List<Users> users = await Task.Run(() => (from u in _userManager.Users.ToList()
+                                                      select new Users()
+                                                      {
+                                                          Email = u.Email,
+                                                          UserName = u.UserName
+                                                      }).ToList());
+            return users;
+        }
 
            /// <summary>
         /// Thie method willaccept the token as inout parameter and wil receive token from it

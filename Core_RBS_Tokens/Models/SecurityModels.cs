@@ -50,4 +50,10 @@ namespace Core_RBS_Tokens.Models
         public string? UserName { get; set;}
         public string? RoleName { get; set;}
     }
+
+    public class Users
+    {
+        public string? Email { get; set; }
+        public string? UserName { get; set; }
+    }
 }
