@@ -1,8 +1,10 @@
 ﻿using Core_RBS_Tokens.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace Core_RBS_Tokens.Services
 {
@@ -156,47 +158,38 @@ namespace Core_RBS_Tokens.Services
                             // get the user object based on Email
 
                             IdentityUser usr = new IdentityUser(user.Email);
-                            var role = await _userManager.GetRolesAsync(usr);
-
-                            // if user is not associated with role then log off
-                            if (role.Count == 0)
-                            {
-                                await _signInManager.SignOutAsync();
-                                response.StatucCode = 500;
-                                response.Message = "The User is not associated with Role";
-                                return response;
-                            }
-                            else
-                            { 
-                                //3d set the expiry, subject, etc.
+                                 //3d set the expiry, subject, etc.
                             // note that Issuer and Audience will be null because 
                             // there is no third-party issuer
-                            var securityTokenDescription = new SecurityTokenDescriptor()
-                            {
-                                Issuer = null,
-                                Audience = null,
-                                Subject = new ClaimsIdentity(new List<Claim> {
-                                    new Claim("username",usr.Id,ToString()),
-                                    new Claim("rolename",role[0] )
-                                }),
-                                Expires = DateTime.UtcNow.AddMinutes(expiryTimeSpan),
-                                IssuedAt = DateTime.UtcNow,
-                                NotBefore = DateTime.UtcNow,
-                                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKey), SecurityAlgorithms.HmacSha256Signature)
-                            };
-                            //3e Now generate token using JwtSecurityTokenHandler
-                            var jwtHandler = new JwtSecurityTokenHandler();
-                            var jwToken = jwtHandler.CreateJwtSecurityToken(securityTokenDescription);
-                            response.Token = jwtHandler.WriteToken(jwToken);
+                            
+                            var claims = new[]
+                                    {
+                                        //new Claim("username", usr.Id.ToString()),
+                                        //new Claim("rolename",roles[0])
+                                        new Claim(ClaimTypes.Name, usr.UserName),
+                                        new Claim(ClaimTypes.Role, roles[0])
+                                    };
+
+                                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKeyString));
+                                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                                    var token = new JwtSecurityToken(
+                                        issuer: null,
+                                        audience: null,
+                                        claims: claims,
+                                        expires: DateTime.Now.AddMinutes(60),
+                                        signingCredentials: creds);
+
+                                    response.Token = new JwtSecurityTokenHandler().WriteToken(token);
                             #endregion
 
                             response.StatucCode = 200;
-                            response.RoleName = role[0];
+                            response.RoleName = roles[0];
                             response.UserName = user.Email;
                             response.Message = $"User {user.Email} Logged in successfuly";
                            }
                             
-                        }
+                        //}
                         else
                         {
                             response.StatucCode = 500;
@@ -315,39 +308,53 @@ namespace Core_RBS_Tokens.Services
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        public async Task<string> GetUserFromTokenAsync(string token)
-        {
-            string userName = "";
-            var jwtHandler = new JwtSecurityTokenHandler();
-            // read the token values
-            var jwtSecurityToken = jwtHandler.ReadJwtToken(token);
-            // read claims
-            var claims = jwtSecurityToken.Claims;
-            // read first claim
-            var userIdClaim = claims.First();
-            // read the user Id
-            var userId = userIdClaim.Value;
-            // get the username from the userid
-            var identityUser = await _userManager.FindByIdAsync(userId);
-            userName = identityUser.UserName;
-            return userName;
-        }
+        //public async Task<string> GetUserFromTokenAsync(string token)
+        //{
+        //    string userName = "";
+        //    var jwtHandler = new JwtSecurityTokenHandler();
+        //    // read the token values
+        //    var jwtSecurityToken = jwtHandler.ReadJwtToken(token);
+        //    // read claims
+        //    var claims = jwtSecurityToken.Claims;
+        //    // read first claim
+        //    var userIdClaim = claims.First();
+        //    // read the user Id
+        //    var userId = userIdClaim.Value;
+        //    // get the username from the userid
+        //    var identityUser = await _userManager.FindByIdAsync(userId);
+        //    userName = identityUser.UserName;
+        //    return userName;
+        //}
 
-        public string GetRoleFormToken(string token)
+        //public string GetRoleFormToken(string token)
+        //{
+        //    string roleName = "";
+        //    var jwtHandler = new JwtSecurityTokenHandler();
+        //    // read the token values
+        //    var jwtSecurityToken = jwtHandler.ReadJwtToken(token);
+        //    // read claims
+        //    var claims = jwtSecurityToken.Claims;
+        //    // read first two claim
+        //    var roleClaim = claims.Take(2);
+        //    // read the role
+        //    var roleRecord = roleClaim.Last();
+        //    // read the role name
+        //    roleName = roleRecord.Value;
+        //    return roleName;
+        //}
+
+        public string[] GetUserNameAndRoleFromToken(HttpContext httpContext)
         {
-            string roleName = "";
-            var jwtHandler = new JwtSecurityTokenHandler();
-            // read the token values
-            var jwtSecurityToken = jwtHandler.ReadJwtToken(token);
-            // read claims
-            var claims = jwtSecurityToken.Claims;
-            // read first two claim
-            var roleClaim = claims.Take(2);
-            // read the role
-            var roleRecord = roleClaim.Last();
-            // read the role name
-            roleName = roleRecord.Value;
-            return roleName;
+            string[] data = new string[2];
+            if (httpContext.User.Identity is ClaimsIdentity identity)
+            {
+                var username = identity.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
+                var role = identity.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+                data[0] = username;
+                data[1] = role;
+                return data;
+            }
+            return data;
         }
         
     }

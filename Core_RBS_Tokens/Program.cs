@@ -1,11 +1,14 @@
 using Core_RBS_Tokens.Models;
 using Core_RBS_Tokens.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,21 +42,20 @@ builder.Services.AddScoped<SecurityServices>();
 builder.Services.AddScoped<SalesService>();
 
 #region Define Policies
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminPolicy", policy =>
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminPolicy", policy =>
     {
         policy.RequireRole("Administrator");
-    });
-    options.AddPolicy("AdminManagerPolicy", policy =>
+    })
+    .AddPolicy("AdminManagerPolicy", policy =>
     {
         policy.RequireRole("Administrator", "Manager");
-    });
-    options.AddPolicy("AdminManagerClerkPolicy", policy =>
+    })
+    .AddPolicy("AdminManagerClerkPolicy", policy =>
     {
         policy.RequireRole("Administrator", "Manager", "Clerk");
     });
-});
 #endregion
 
 #region Token Validation
@@ -65,45 +67,26 @@ if (string.IsNullOrEmpty(secretKeyString))
 }
 byte[] secretKey = Convert.FromBase64String(secretKeyString);
 // set the Authentication Scheme
-builder.Services.AddAuthentication(options =>
+ 
+builder.Services.AddAuthentication(options => 
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    // Validate the token by receiving the token from the Authorization Request Header
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
+       
+    })
+    .AddJwtBearer(options =>
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(secretKey),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
-    options.Events = new JwtBearerEvents
-    {
-        // If the Token is expired then respond
-        OnAuthenticationFailed = context =>
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-            {
-                context.Response.Headers.Append("Authentication-Token-Expired", "true");
-            }
-            return Task.CompletedTask;
-        }
-    };
-})
-.AddCookie(options =>
-{
-    options.Events.OnRedirectToAccessDenied =
-    options.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
-    };
-});
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = null,
+            ValidAudience = null,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKeyString))
+        };
+    });
 #endregion
 
 #region The JSON Serialization
@@ -148,11 +131,11 @@ app.MapPost("/api/createuser", async (SecurityServices serv, RegisterUser user) 
     return Results.Ok(response);
 });
 //Create New Role
-app.MapPost("/api/createrole", async (SecurityServices serv, RoleData role) =>
+app.MapPost("/api/createrole",  async (SecurityServices serv, RoleData role) =>
 {
     var response = await serv.CreateRoleAsync(role);
     return Results.Ok(response);
-}).RequireAuthorization("AdminPolicy");
+}).WithOpenApi().RequireAuthorization("AdminPolicy");
 // Assign Role to User
 app.MapPost("/api/approveuser", async (SecurityServices serv, UserRole userrole) =>
 {
@@ -209,7 +192,7 @@ app.MapGet("/api/orders/{id}", async (HttpRequest request, SecurityServices serv
 }).RequireAuthorization("AdminManagerClerkPolicy");
 
 
-app.MapPost("/api/createorder/", async (SalesService serv, int id, Order order) =>
+app.MapPost("/api/createorder", async (SalesService serv, Order order) =>
 {
     var response = await serv.SaveOdreAsync(order);
     return Results.Ok(response);
@@ -239,8 +222,13 @@ void GetRequestInfo(HttpRequest request, SecurityServices serv, out string userN
 {
     var headers = request.Headers["Authorization"];
     var receivedToken = headers[0].Split(" ");
-    userName = serv.GetUserFromTokenAsync(receivedToken[1]).Result;
-    roleName = serv.GetRoleFormToken(receivedToken[1]);
+    //userName = serv.GetUserFromTokenAsync(receivedToken[1]).Result;
+    //roleName = serv.GetRoleFormToken(receivedToken[1]);
+
+    var authDetails =  serv.GetUserNameAndRoleFromToken(request.HttpContext);
+    userName = authDetails[0];
+    roleName = authDetails[1];
+
 }
 app.MapScalarApiReference();
 app.Run();
