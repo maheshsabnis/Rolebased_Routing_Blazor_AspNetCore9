@@ -14,30 +14,12 @@ namespace Core_RBS_Tokens.Services
     /// </summary>
     public class SecurityServices
     {
-         /// <summary>
-        /// For Creating and Managing Users
-        /// </summary>
+        
         UserManager<IdentityUser> _userManager;
-        /// <summary>
-        /// Managing USer Logins
-        /// </summary>
         SignInManager<IdentityUser> _signInManager;
-        /// <summary>
-        /// Create an Manage Roles
-        /// </summary>
         RoleManager<IdentityRole> _roleManager;
-        /// <summary>
-        /// USed to read onfiguration from the appsettings.json
-        /// </summary>
         IConfiguration _config;
-
-        /// <summary>
-        /// Inject THe UserManager and SignInManager in DI Container 
-        /// These dependencies will be resolved using 
-        /// The 'AddIdentityService<IdentityUser, IdentityRole>();
-        /// </summary>
-        /// <param name="userManager"></param>
-        /// <param name="signInManager"></param>
+      
         public SecurityServices(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager,
              IConfiguration config)
         {
@@ -192,7 +174,6 @@ namespace Core_RBS_Tokens.Services
             return response;
         }
 
-
         public async Task<SecureResponse> CreateRoleAsync(RoleData role)
         {
             SecureResponse response = new SecureResponse();
@@ -229,7 +210,6 @@ namespace Core_RBS_Tokens.Services
             }
             return response;
         }
-
         public async Task<SecureResponse> AddRoleToUserAsync(UserRole userRole)
         {
             SecureResponse response = new SecureResponse();
@@ -269,9 +249,6 @@ namespace Core_RBS_Tokens.Services
             return response;
         }
 
-
-
-
         public async Task<List<RoleData>> GetRolesAsync()
         {
             List<RoleData> roles = new List<RoleData>();
@@ -293,7 +270,6 @@ namespace Core_RBS_Tokens.Services
                                                       }).ToList());
             return users;
         }
-
           
         public string[] GetUserNameAndRoleFromToken(HttpContext httpContext)
         {

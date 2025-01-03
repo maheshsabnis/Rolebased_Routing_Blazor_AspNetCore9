@@ -47,7 +47,5 @@ namespace Core_RBS_Tokens.Models
         public bool IsApproved { get; set; }
         [Required(ErrorMessage ="Comments is required")]
         public string? Comments { get; set; }
-
-
     }
 }
