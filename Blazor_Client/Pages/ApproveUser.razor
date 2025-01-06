@@ -1,7 +1,9 @@
 ﻿@page "/approveuser"
 @using Blazor_Client.Models;
+@using Blazored.SessionStorage
 @inject HttpClient httpClient;
 @inject NavigationManager navigationManager
+@inject ISessionStorageService session;
 <h3>Approve User</h3>
 <div class="container">
     <table class="table table-bordered table-striped table-dark">
@@ -9,11 +11,11 @@
             <tr>
                 <td>Select User:</td>
                 <td>
-                    <InputSelect @bind-Value="selectedUser" TValue="string">
+                    <InputSelect @bind-Value="selectedUser" TValue="string" class="form-control">
                         <option>Choose User....</option>
-                       @foreach (var item in users)
+                        @foreach (var item in users)
                         {
-                           <option value="@item">@item</option>
+                            <option value="@item.UserName">@item.UserName</option>
                         }
                     </InputSelect>
                 </td>
@@ -21,17 +23,39 @@
             <tr>
                 <td>Select Role:</td>
                 <td>
-                    <InputSelect @bind-Value="selectedRole" TValue="string">
+                    <InputSelect @bind-Value="selectedRole" TValue="string" class="form-control">
                         <option>Choose Role....</option>
+                        @foreach (var item in roles)
+                        {
+                            <option value="@item.RoleName">@item.RoleName</option>
+                        }
                     </InputSelect>
                 </td>
             </tr>
         </tbody>
     </table>
     <div class="btn-group-lg">
-        <button class="btn btn-warning">Clear</button>
-        <button class="btn btn-success">Save</button>
+        <button class="btn btn-warning" @onclick="clear">Clear</button>
+        <button class="btn btn-success" @onclick="approveuser">Save</button>
     </div>
+    <hr/>
+    @if (isSuccess)
+    {
+        <div class="container">
+            <strong>
+                Congratulations!!! The User @selectedUser is successfully is assigned to Role @selectedRole
+            </strong>
+        </div>
+    }
+    else
+    {
+        <div class="container">
+            <strong>
+                Sorry!!! The Operation is failed
+            </strong>
+        </div>
+    }
+
 </div>
 
 
@@ -41,11 +65,62 @@
 
     List<Users>? users = new List<Users>();
     List<RoleData>? roles = new List<RoleData>();
+    bool isSuccess = false;
     string urlUsers = "https://localhost:7291/api/users";
     string urlRoles = "https://localhost:7291/api/roles";
+    string url = "https://localhost:7291/api/approveuser";
     protected override async Task OnInitializedAsync()
     {
-        users = await httpClient.GetFromJsonAsync<List<Users>>(urlUsers);
-        roles = await httpClient.GetFromJsonAsync<List<RoleData>>(urlRoles);
+        // Get the RoleName from the Session Storage
+
+        var roleName = await session.GetItemAsync<string>("RoleName");
+        if (String.IsNullOrEmpty(roleName) || roleName.Trim() != "Administrator")
+            navigationManager.NavigateTo("/accessdenied");
+        else
+        { 
+            var token = await session.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            users = await httpClient.GetFromJsonAsync<List<Users>>(urlUsers);
+            roles = await httpClient.GetFromJsonAsync<List<RoleData>>(urlRoles);
+        }
+
+    }
+
+    private async Task approveuser()
+    {
+        try
+        {
+            var token = await session.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var userRole = new UserRole()
+            {
+              UserName = selectedUser,
+              RoleName = selectedRole
+            };
+
+            var response = await httpClient.PostAsJsonAsync(url, userRole);
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+    private void clear()
+    {
+        selectedRole = string.Empty;
+        selectedUser = string.Empty; 
     }
 }

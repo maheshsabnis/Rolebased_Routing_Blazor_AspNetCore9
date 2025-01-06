@@ -1,6 +1,93 @@
 ﻿@page "/createorder"
+@using Blazor_Client.Models
+@using Blazored.SessionStorage
+@inject HttpClient httpClient
+@inject ISessionStorageService session;
+@inject NavigationManager navigationManager
+
 <h3>Create New Order</h3>
 
-@code {
+<div class="container">
+    <EditForm Model="@order" OnValidSubmit="@SaveOrder">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+        <div class="form-group">
+            <label for="CustomerName">Customer Name</label>
+            <InputText @bind-Value="order.CustomerName" class="form-control"/>
+            <ValidationMessage For="@(()=>order.CustomerName)"/>
+        </div>
+        <div class="form-group">
+            <label for="ItemName">Item Name</label>
+            <InputSelect @bind-Value="order.CustomerName" TValue="string" class="form-control">
+                <option>Selected Item to Purchase....</option>
+                @foreach (var item in items)
+                {
+                    <option value="@item">@item</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(()=>order.ItemName)" />
+        </div>
+        <div class="form-group">
+            <label for="OrderedDate">Ordered Date</label>
+            <InputDate @bind-Value="order.OrderedDate" class="form-control" />
+            <ValidationMessage For="@(()=>order.OrderedDate)" />
+        </div>
+        <div class="form-group">
+            <label for="Quantity">Ordered Quantity</label>
+            <InputNumber @bind-Value="order.Quantity" class="form-control" />
+            <ValidationMessage For="@(()=>order.Quantity)" />
+        </div>
+        <div class="form-group">
+            <label for="Comments">Comments</label>
+            <InputTextArea @bind-Value="order.Comments" class="form-control" />
+            <ValidationMessage For="@(()=>order.Comments)" />
+        </div>
+        <div class="btn-group-lg">
+            <button class="btn btn-warning">Clear</button>
+            <button type="submit" class="btn btn-success">Save</button>
+        </div>
+    </EditForm>
 
+</div>
+
+
+
+
+@code {
+    private Order? order = new Order();
+    string currentUser = string.Empty;
+    private string url = "https://localhost:7291/api/createorder";
+    private ResponseObject<Order>? createOrderResponse = new ResponseObject<Order>();
+    private List<string> items = new List<string>() 
+    {
+       "Laptop","Mobile","Charger","Charger Cable","USB","Power Bank","Laptop Charger","Screen","Router"
+    };
+    private async Task SaveOrder()
+    {
+        currentUser = await session.GetItemAsStringAsync("UserName");
+        // If the Current User Value is Null or Empty then Order cannot be added
+        if (String.IsNullOrEmpty(currentUser))
+        {
+            navigationManager.NavigateTo("/accessdenied");
+        }
+        else
+        {
+            order.OrderStatus = "New Order";
+            order.IsApproved = false;
+            order.CreatedBy = currentUser;
+
+            var response = await httpClient.PostAsJsonAsync(url, order);
+            if (response.IsSuccessStatusCode)
+            {
+                navigationManager.NavigateTo("/listorders");
+            }
+
+        }
+    }
+
+    private void Clear()
+    {
+        order = new Order();
+
+    }
 }

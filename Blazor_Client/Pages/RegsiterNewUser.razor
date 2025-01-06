@@ -1,26 +1,93 @@
 ﻿@page "/registeruser"
 
 @using Blazor_Client.Models
+@using System.Text.Json
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
 <h3>Register New User</h3>
 
 <div class="container">
-    <div class="form-group">
-        <label for="Email">Email:</label>
-        <InputText @bind-Value="registerUser.Email" class="form-control"/>
-    </div>
-    <div class="form-group">
-        <label for="Password">Password:</label>
-        <InputText @bind-Value="registerUser.Password" type="password"  class="form-control" />
-    </div>
-    <div class="form-group">
-        <label for="ConfirmPassword">Confirm Password:</label>
-        <InputText @bind-Value="registerUser.ConfirmPassword" type="password" class="form-control" />
-    </div>
-    <div class="btn-group-lg">
-        <button class="btn btn-warning">Clear</button>
-        <button class="bbtn btn-primary">Save</button>
-    </div>
+    <EditForm Model="registerUser" OnValidSubmit="@CreateUser">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+        <div class="form-group">
+            <label for="Email">Email:</label>
+            <InputText @bind-Value="registerUser.Email" class="form-control"/>
+            <ValidationMessage For="@(() => registerUser.Email)"/>
+        </div>
+        <div class="form-group">
+            <label for="Password">Password:</label>
+            <InputText @bind-Value="registerUser.Password" type="password"  class="form-control" />
+            <ValidationMessage For="@(() => registerUser.Password)" />
+        </div>
+        <div class="form-group">
+            <label for="ConfirmPassword">Confirm Password:</label>
+            <InputText @bind-Value="registerUser.ConfirmPassword" type="password" class="form-control" />
+            <ValidationMessage For="@(() => registerUser.ConfirmPassword)" />
+        </div>
+        <div class="btn-group-lg">
+            <button class="btn btn-warning" @onclick="Clear">Clear</button>
+            <button type="submit" class="btn btn-success" >Save</button>
+        </div>
+    </EditForm>
+    @if (!isSuccess)
+    {
+        <div class="form-group">
+            <strong>
+                Sorry!!! The User Registration failed, please try after some time.
+            </strong>
+        </div>
+    }
+    else
+    {
+        if (secureResponse.StatucCode == 500)
+        {
+            <div class="form-group">
+                <strong>
+                    @secureResponse.Message
+                </strong>
+            </div>
+        }
+        else
+        {
+            <div class="form-group">
+                <strong>
+                    @secureResponse.Message
+                </strong>
+            </div>
+        }
+
+    }
+
 </div>
 @code {
     private RegisterUser registerUser = new  RegisterUser();
+    bool isSuccess = false;
+    private string url = "https://localhost:7291/api/createuser";
+    SecureResponse? secureResponse = new SecureResponse(); 
+    private async Task CreateUser()
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(url,registerUser);
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+                var r = await response.Content.ReadAsStringAsync();
+
+                secureResponse = JsonSerializer.Deserialize<SecureResponse>(r);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    private void Clear()
+    {
+        registerUser = new RegisterUser();
+        secureResponse = new SecureResponse();
+    }
+
 }

@@ -1,6 +1,59 @@
 ﻿@page "/listorders"
+@using Blazored.SessionStorage
+@using Blazor_Client.Models
+
+@inject ISessionStorageService session
+@inject HttpClient httpClient;
+
+
 <h3>List Orders</h3>
 
-@code {
+<div class="container">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <td>OrderId</td>
+                <td>Customer Name</td>
+                <td>Item Name</td>
+                <td>Ordered Date</td>
+                <td>Quantity</td>
+                <td>TotalPrice</td>
+                <td>Order Status</td>
+                <td>Created By</td>
+                <td>Updated By</td>
+                <td>Updated Date</td>
+                <td>Is Approved</td>
+                <td>Comments</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in orders)
+            {
+                <tr>
+                    <td>@item.OrderId</td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.ItemName</td>
+                    <td>@item.OrderedDate</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.TotalPrice</td>
+                    <td>@item.OrderStatus</td>
+                    <td>@item.CreatedBy</td>
+                    <td>@item.UpdatedBy</td>
+                    <td>@item.UpdatedDate</td>
+                    <td>@item.IsApproved</td>
+                    <td>@item.Comments</td>
+                </tr> 
+            }
+        </tbody>
+    </table>
+</div>
 
+
+@code {
+    private List<Order>? orders = new List<Order>();
+    string url = "https://localhost:7291/api/orders";
+    protected override async Task OnInitializedAsync()
+    {
+        orders = await httpClient.GetFromJsonAsync<List<Order>>(url);
+    }
 }

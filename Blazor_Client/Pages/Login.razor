@@ -20,6 +20,16 @@
         <button class="btn btn-warning" @onclick="clear">Clear</button>
         <button class="btn btn-primary" @onclick="login">Login</button>
     </div>
+    <hr/>
+    @if (isLoginFailed)
+    { 
+        <div class="alert alert-danger">
+            <strong>
+                @errorMessage
+            </strong>
+            <button class="btn btn-warning" @onclick="gotohome">Go To Home Page</button>
+        </div>
+    }
 </div>
 
 
@@ -27,18 +37,30 @@
     private LoginUser user = new LoginUser();
     string url = "https://localhost:7291/api/authuser";
     string errorMessage = string.Empty;
-    private SecureResponse securityResponse = new SecureResponse();
+    private SecureResponse? securityResponse = new SecureResponse();
+    bool isLoginFailed = false;
     private async Task login()
     {
         var response = await httpClient.PostAsJsonAsync<LoginUser>(url, user);
+
         if (response.IsSuccessStatusCode)
         {
             var receivedResponse = await response.Content.ReadAsStringAsync();
             securityResponse = JsonSerializer.Deserialize<SecureResponse>(receivedResponse);
-            await session.SetItemAsync("authToken", securityResponse.Token);
-            await session.SetItemAsync("RoleName", securityResponse.RoleName);
-            await session.SetItemAsync("UserName", securityResponse.UserName);
-            navigationManager.NavigateTo("/");
+
+            if (securityResponse.StatucCode == 500)
+            {
+                errorMessage = $"The User {user.Email} is found, but role is not assigned to this user so the use cannot be authenticated";
+                isLoginFailed = true;
+            }
+            else
+            { 
+                await session.SetItemAsync("authToken", securityResponse.Token);
+                await session.SetItemAsync("RoleName", securityResponse.RoleName);
+                await session.SetItemAsync("UserName", securityResponse.UserName);
+                navigationManager.NavigateTo("/");
+            }
+
         }
         else
         {
@@ -51,4 +73,9 @@
         user = new LoginUser();
         errorMessage = string.Empty;
     }
+    private void gotohome()
+    {
+        navigationManager.NavigateTo("/");
+    }
+
 }
