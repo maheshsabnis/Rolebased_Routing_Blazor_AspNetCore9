@@ -1,5 +1,10 @@
 ﻿@page "/login"
 @using Blazor_Client.Models
+@using Blazored.SessionStorage
+@using System.Text.Json
+@inject HttpClient httpClient;
+@inject NavigationManager navigationManager
+@inject ISessionStorageService session;
 <h3>Login</h3>
 
 <div class="container">
@@ -12,12 +17,38 @@
         <InputText @bind-Value="user.Password" type="password" class="form-control" />
     </div>
     <div class="btn-group-lg">
-        <button class="btn btn-warning">Clear</button>
-        <button class="bbtn btn-primary">Login</button>
+        <button class="btn btn-warning" @onclick="clear">Clear</button>
+        <button class="btn btn-primary" @onclick="login">Login</button>
     </div>
 </div>
 
 
 @code {
-  private LoginUser user = new LoginUser();
+    private LoginUser user = new LoginUser();
+    string url = "https://localhost:7291/api/authuser";
+    string errorMessage = string.Empty;
+    private SecureResponse securityResponse = new SecureResponse();
+    private async Task login()
+    {
+        var response = await httpClient.PostAsJsonAsync<LoginUser>(url, user);
+        if (response.IsSuccessStatusCode)
+        {
+            var receivedResponse = await response.Content.ReadAsStringAsync();
+            securityResponse = JsonSerializer.Deserialize<SecureResponse>(receivedResponse);
+            await session.SetItemAsync("authToken", securityResponse.Token);
+            await session.SetItemAsync("RoleName", securityResponse.RoleName);
+            await session.SetItemAsync("UserName", securityResponse.UserName);
+            navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            errorMessage = "Login failed. Please check your credentials.";
+        }
+    }
+
+    private void clear()
+    {
+        user = new LoginUser();
+        errorMessage = string.Empty;
+    }
 }

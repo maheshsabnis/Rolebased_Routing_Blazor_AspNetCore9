@@ -1,6 +1,28 @@
 ﻿@page "/logout"
+@using Blazored.SessionStorage
+@inject NavigationManager navigationManager
+@inject ISessionStorageService session;
 <h3>Logout</h3>
+<div class="container">
+    <strong>
+        Are you sure you want to logout?
+    </strong>
+
+    <div class="btn btn-group-lg">
+        <button class="btn btn-danger" @onclick="Logoff">Logout</button>
+        <button class="btn btn-warning" @onclick="Cancel">Cancel</button>
+    </div>
+</div>
 
 @code {
-
+    private async Task Logoff()
+    {
+        await session.ClearAsync();
+        this.StateHasChanged();
+        navigationManager.NavigateTo("/");
+    }
+    private void Cancel()
+    { 
+        navigationManager.NavigateTo("/");
+    }
 }

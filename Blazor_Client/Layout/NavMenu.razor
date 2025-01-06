@@ -1,4 +1,7 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Blazor_Client.Models
+@using Blazored.SessionStorage;
+@inject ISessionStorageService session;
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Blazor_Client</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -10,20 +13,87 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="nav-link" href="login">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Login
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="registeruser">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> New User
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+        @if (RoleName == "Administrator")
+        {
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="approveuser">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Approve User
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="createrole">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Role
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="listorders">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> List All Orders
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="createorder">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Order
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="editorder">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Edit Order
+                </NavLink>
+            </div>
+        }
+
+        @if (RoleName == "Manager")
+        { 
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="listorders">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> List All Orders
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="createorder">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Order
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="editorder">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Edit Order
+                </NavLink>
+            </div>
+        }
+
+        @if (RoleName == "Clerk")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="listorders">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> List All Orders
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="createorder">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Order
+                </NavLink>
+            </div>
+        }
+        @if (!String.IsNullOrEmpty(RoleName))
+        {
+
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="logout">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Logout
+                </NavLink>
+            </div>
+        }
 
     </nav>
 </div>
@@ -31,10 +101,23 @@
 @code {
     private bool collapseNavMenu = true;
 
+
+    private SecureResponse response = new SecureResponse();
+    string RoleName = string.Empty;
+    string UserName = string.Empty;
+    protected async override Task OnInitializedAsync()
+    {
+        RoleName = await session.GetItemAsync<string>("RoleName");
+        UserName = await session.GetItemAsync<string>("UserName");
+        this.StateHasChanged();
+    }
+
+
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
+ 
 }

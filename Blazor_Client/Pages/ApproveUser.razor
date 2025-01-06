@@ -1,6 +1,51 @@
 ﻿@page "/approveuser"
+@using Blazor_Client.Models;
+@inject HttpClient httpClient;
+@inject NavigationManager navigationManager
 <h3>Approve User</h3>
+<div class="container">
+    <table class="table table-bordered table-striped table-dark">
+        <tbody>
+            <tr>
+                <td>Select User:</td>
+                <td>
+                    <InputSelect @bind-Value="selectedUser" TValue="string">
+                        <option>Choose User....</option>
+                       @foreach (var item in users)
+                        {
+                           <option value="@item">@item</option>
+                        }
+                    </InputSelect>
+                </td>
+            </tr>
+            <tr>
+                <td>Select Role:</td>
+                <td>
+                    <InputSelect @bind-Value="selectedRole" TValue="string">
+                        <option>Choose Role....</option>
+                    </InputSelect>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="btn-group-lg">
+        <button class="btn btn-warning">Clear</button>
+        <button class="btn btn-success">Save</button>
+    </div>
+</div>
+
 
 @code {
+    private string selectedUser = string.Empty;
+    private string selectedRole = string.Empty;
 
+    List<Users>? users = new List<Users>();
+    List<RoleData>? roles = new List<RoleData>();
+    string urlUsers = "https://localhost:7291/api/users";
+    string urlRoles = "https://localhost:7291/api/roles";
+    protected override async Task OnInitializedAsync()
+    {
+        users = await httpClient.GetFromJsonAsync<List<Users>>(urlUsers);
+        roles = await httpClient.GetFromJsonAsync<List<RoleData>>(urlRoles);
+    }
 }

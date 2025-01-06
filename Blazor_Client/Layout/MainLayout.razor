@@ -1,11 +1,18 @@
 ﻿@inherits LayoutComponentBase
+@using Blazored.SessionStorage
+@inject NavigationManager navigationManager
+@inject ISessionStorageService session;
 <div class="page">
     <div class="sidebar">
         <NavMenu />
+
     </div>
 
     <main>
         <div class="top-row px-4">
+            <label style="color:red">
+                @UserName
+            </label>
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
 
@@ -14,3 +21,13 @@
         </article>
     </main>
 </div>
+
+@code {
+    string UserName = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        UserName = await session.GetItemAsync<string>("UserName");
+    }
+
+ 
+}

@@ -1,6 +1,20 @@
-﻿@page "/createrol"
+﻿@page "/createrole"
+@using Blazor_Client.Models
+
 <h3>Create Roles</h3>
 
-@code {
+<div class="container">
+    <div class="form-group">
+        <label for="RoleName">Enter the Role Name:</label>
+        <InputText @bind-Value="role.RoleName" class="form-control"/>
+    </div>
+    <div class="btn-group-lg">
+        <button class="btn btn-warning">Clear</button>
+        <button class="btn btn-success">Save</button>
+    </div>
+</div>
 
+
+@code {
+    private RoleData role = new RoleData();
 }
