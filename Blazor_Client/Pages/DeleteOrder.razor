@@ -8,33 +8,33 @@
 <h3>Delete Order</h3>
 
 <div class="container">
-  
-        
-        <div class="form-group">
-            <label for="CustomerName">Customer Name</label>
-            <InputText @bind-Value="order.CustomerName" class="form-control" readonly="readonly" />
-        </div>
-        <div class="form-group">
-            <label for="ItemName">Item Name</label>
-            <InputText @bind-Value="order.ItemName" class="form-control" readonly="readonly" />
-        </div>
-        <div class="form-group">
-            <label for="OrderedDate">Ordered Date</label>
+
+
+    <div class="form-group">
+        <label for="CustomerName">Customer Name</label>
+        <InputText @bind-Value="order.CustomerName" class="form-control" readonly="readonly" />
+    </div>
+    <div class="form-group">
+        <label for="ItemName">Item Name</label>
+        <InputText @bind-Value="order.ItemName" class="form-control" readonly="readonly" />
+    </div>
+    <div class="form-group">
+        <label for="OrderedDate">Ordered Date</label>
         <InputDate @bind-Value="order.OrderedDate" class="form-control" readonly="readonly" />
-        </div>
-        <div class="form-group">
-            <label for="Quantity">Ordered Quantity</label>
-              <InputNumber @bind-Value="order.Quantity" class="form-control" readonly="readonly" />
-        </div>
-        <div class="form-group">
-            <label for="Comments">Comments</label>
-            <InputTextArea @bind-Value="order.Comments" class="form-control" readonly="readonly" />
-        </div>
-        <div class="btn-group-lg">
-            <button class="btn btn-warning" @onclick="Cancel">Clear</button>
+    </div>
+    <div class="form-group">
+        <label for="Quantity">Ordered Quantity</label>
+        <InputNumber @bind-Value="order.Quantity" class="form-control" readonly="readonly" />
+    </div>
+    <div class="form-group">
+        <label for="Comments">Comments</label>
+        <InputTextArea @bind-Value="order.Comments" class="form-control" readonly="readonly" />
+    </div>
+    <div class="btn-group-lg">
+        <button class="btn btn-warning" @onclick="Cancel">Clear</button>
         <button type="submit" class="btn btn-success" @onclick="DeleteRecord">Delete</button>
-        </div>
-    
+    </div>
+
 
 </div>
 
@@ -44,7 +44,7 @@
 @code {
     [Parameter]
     public int id { get; set; }
-    private Order? order = new Order();
+    private Order? order;
     string currentUser = string.Empty;
     string token = string.Empty;
     string roleName = string.Empty;
@@ -64,11 +64,15 @@
         if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
         {
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            order = await httpClient.GetFromJsonAsync<Order>($"https://localhost:7291/api/orders/{id}");
+            var receivedOrder = await httpClient.GetFromJsonAsync<ResponseObject<Order>>($"https://localhost:7291/api/orders/{id}");
 
-            if (order == null)
+            if (receivedOrder == null)
             {
                 navigationManager.NavigateTo("/recordnotfound");
+            }
+            else
+            {
+                order = receivedOrder.Record;
             }
         }
         else

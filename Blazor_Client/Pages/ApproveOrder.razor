@@ -22,7 +22,7 @@
     </div>
     <div class="form-group">
         <label for="IsApproved">Order Approve/Reject</label>
-        <InputSelect class="form-control" @bind-Value="order.IsApproved">
+        <InputSelect class="form-control" @bind-Value="selection" TValue="string">
             <option>Decide to Approve or Reject</option>
             @foreach (var item in OrderApproveReject)
             {
@@ -56,7 +56,7 @@
     string token = string.Empty;
     string roleName = string.Empty;
     private string url = "https://localhost:7291/api/processorder";
-
+    private string? selection;
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,11 +69,16 @@
             if (roleName == "Administrator")
             { 
                 httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                order = await httpClient.GetFromJsonAsync<Order>($"https://localhost:7291/api/orders/{id}");
+                var receivedOrder = await httpClient.GetFromJsonAsync<ResponseObject<Order>>($"https://localhost:7291/api/orders/{id}");
 
-                if (order == null)
+                if (receivedOrder == null)
                 {
                     navigationManager.NavigateTo("/recordnotfound");
+                }
+                else
+                {
+                    order = receivedOrder.Record;
+                    this.StateHasChanged();
                 }
             }
             else
@@ -98,7 +103,17 @@
         {
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-            var response = await httpClient.PostAsJsonAsync(url, order);
+            if (selection == "Approve")
+            {
+                order.IsApproved = true;
+            }
+            else
+            {
+                order.IsApproved = false;
+            }
+            order.UpdatedDate = DateOnly.FromDateTime(DateTime.Now);
+            order.UpdatedBy = currentUser;
+            var response = await httpClient.PostAsJsonAsync($"{url}/{id}", order);
             if (response.IsSuccessStatusCode)
             {
                 navigationManager.NavigateTo("/listorders");

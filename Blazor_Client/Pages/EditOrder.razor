@@ -61,7 +61,7 @@
 @code {
     [Parameter]
     public int id { get; set; }
-    private Order? order = new Order();
+    private Order? order;
     string currentUser = string.Empty;
     string token = string.Empty;
     string roleName = string.Empty;
@@ -81,12 +81,17 @@
         if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
         {
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            order = await httpClient.GetFromJsonAsync<Order>($"https://localhost:7291/api/orders/{id}");
+            var receivedOrder = await httpClient.GetFromJsonAsync<ResponseObject<Order>>($"https://localhost:7291/api/orders/{id}");
 
-            if (order == null)
+            if (receivedOrder == null)
             {
                 navigationManager.NavigateTo("/recordnotfound");
             }
+            else
+            {
+                order = receivedOrder.Record;
+            }
+
         }
         else
         { 

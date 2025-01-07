@@ -112,6 +112,8 @@ namespace Core_RBS_Tokens.Services
                 Order? orderToProcess = await context.Orders.FindAsync(id);
                 orderToProcess.IsApproved = order.IsApproved;
                 orderToProcess.Comments = order.Comments;
+                orderToProcess.UpdatedBy = order.UpdatedBy;
+                orderToProcess.UpdatedDate = order.UpdatedDate;
                 await context.SaveChangesAsync();
 
                 if(orderToProcess.IsApproved)
