@@ -1,4 +1,4 @@
-﻿@page "/deleteorder"
+﻿@page "/deleteorder/{id:int}"
 @using Blazor_Client.Models
 @using Blazored.SessionStorage
 @inject HttpClient httpClient
@@ -44,7 +44,7 @@
 @code {
     [Parameter]
     public int id { get; set; }
-    private Order? order;
+    private Order? order =  new Order();
     string currentUser = string.Empty;
     string token = string.Empty;
     string roleName = string.Empty;

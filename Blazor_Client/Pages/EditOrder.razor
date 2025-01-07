@@ -61,11 +61,12 @@
 @code {
     [Parameter]
     public int id { get; set; }
-    private Order? order;
+    private Order? order = new Order();
     string currentUser = string.Empty;
     string token = string.Empty;
     string roleName = string.Empty;
     private string url = "https://localhost:7291/api/updateorder";
+    private EditContext editContext;
 
     private List<string> items = new List<string>()
     {
@@ -74,6 +75,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        editContext = new EditContext(order);
         currentUser = await session.GetItemAsync<string>("UserName");
         token = await session.GetItemAsync<string>("authToken");
         roleName = await session.GetItemAsync<string>("RoleName");
@@ -114,7 +116,7 @@
                
                 order.IsApproved = false;
                 order.UpdatedBy = currentUser;
-
+                order.UpdatedDate = DateOnly.FromDateTime(DateTime.Now);
 
                 var response = await httpClient.PutAsJsonAsync($"{url}/{id}", order);
                 if (response.IsSuccessStatusCode)

@@ -66,17 +66,17 @@ namespace Core_RBS_Tokens.Services
             {
                 Order? orderToUpdate = await context.Orders.FindAsync(id);
                 orderToUpdate.ItemName = order.ItemName;
-                order.Quantity = orderToUpdate.Quantity;
-                order.OrderStatus = orderToUpdate.OrderStatus;
+                orderToUpdate.Quantity = order.Quantity;
+                orderToUpdate.OrderStatus = order.OrderStatus;
                 orderToUpdate.UpdatedBy = order.UpdatedBy;
-                order.UpdatedDate = DateOnly.FromDateTime(DateTime.Now);
-                 order.OrderStatus = "Updated";
+                orderToUpdate.UpdatedDate = DateOnly.FromDateTime(DateTime.Now);
+                orderToUpdate.OrderStatus = "Updated";
 
                 // Calculate the TotalPrice for the Order based on the Quantity and the
                 // UnitPrice of the Item
                 var unitprice = items.Where(i => i.ItemName.Trim() == order.ItemName.Trim()).FirstOrDefault().UnitPrice;
-                order.TotalPrice = order.Quantity * unitprice;
-                var entity = await context.Orders.AddAsync(order);
+                orderToUpdate.TotalPrice = orderToUpdate.Quantity * unitprice;
+                
                 await context.SaveChangesAsync();
                 response.Message = $"Order is updated Successfully";
                 response.StatusCode = 201;
