@@ -1,0 +1,118 @@
+﻿@page "/approveorder/{id:int}"
+@using Blazor_Client.Models
+@using Blazored.SessionStorage
+@inject HttpClient httpClient
+@inject ISessionStorageService session;
+@inject NavigationManager navigationManager
+
+
+<h3>Approve Order</h3>
+<div class="container">
+    <div class="form-group">
+        <label for="OrderId">Order Id</label>
+        <InputNumber @bind-Value="order.OrderId" readonly="readonly" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="CustomerName">Customer Name</label>
+        <InputText @bind-Value="order.CustomerName" readonly="readonly" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="ItemName">Item Name</label>
+        <InputText @bind-Value="order.ItemName" readonly="readonly" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="IsApproved">Order Approve/Reject</label>
+        <InputSelect class="form-control" @bind-Value="order.IsApproved">
+            <option>Decide to Approve or Reject</option>
+            @foreach (var item in OrderApproveReject)
+            {
+                <option value="@item">@item</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label for="Comments">Comments</label>
+        <InputTextArea @bind-Value="order.Comments" class="form-control" />
+    </div>
+    <div class="btn-group-lg">
+        <button class="btn btn-warning" @onclick="Cancel">Cancel</button>
+        <button class="btn btn-success" @onclick="Update">Update Order</button>
+    </div>
+
+</div>
+
+
+
+
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    private List<string> OrderApproveReject = new List<string>() { "Approve", "Reject" };
+    private Order? order = new Order();
+
+
+    string currentUser = string.Empty;
+    string token = string.Empty;
+    string roleName = string.Empty;
+    private string url = "https://localhost:7291/api/processorder";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await session.GetItemAsync<string>("UserName");
+        token = await session.GetItemAsync<string>("authToken");
+        roleName = await session.GetItemAsync<string>("RoleName");
+
+        if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
+        {
+            if (roleName == "Administrator")
+            { 
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                order = await httpClient.GetFromJsonAsync<Order>($"https://localhost:7291/api/orders/{id}");
+
+                if (order == null)
+                {
+                    navigationManager.NavigateTo("/recordnotfound");
+                }
+            }
+            else
+            {
+                navigationManager.NavigateTo("/accessdenied");
+            }
+
+        }
+        else
+        {
+            navigationManager.NavigateTo("/accessdenied");
+        }
+
+    }
+
+    private async Task Update()
+    { 
+        currentUser = await session.GetItemAsync<string>("UserName");
+        token = await session.GetItemAsync<string>("authToken");
+        roleName = await session.GetItemAsync<string>("RoleName");
+        if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await httpClient.PostAsJsonAsync(url, order);
+            if (response.IsSuccessStatusCode)
+            {
+                navigationManager.NavigateTo("/listorders");
+            }
+        }
+        else
+        {
+            navigationManager.NavigateTo("/accessdenied");
+        }
+    }
+
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("/listorders");
+    }
+}

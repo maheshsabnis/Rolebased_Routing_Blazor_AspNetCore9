@@ -43,11 +43,20 @@
                     <td>@item.UpdatedDate</td>
                     <td>@item.IsApproved</td>
                     <td>@item.Comments</td>
-                    @if (roleName == "Administrator" || roleName == "Manager")
+                    @if (roleName == "Manager")
                     {
                         <td>
-                            <button class="btn btn-warning" @onclick="navigateToEdit">Edit</button>
-                            <button class="btn btn-danger" @onclick="navigateToDelete">Delete</button>
+                            <button class="btn btn-warning" @onclick="@(()=>navigateToEdit(item.OrderId))">Edit</button>
+                            <button class="btn btn-danger" @onclick="@(()=>navigateToDelete(item.OrderId))">Delete</button>
+                        </td>
+                    }
+                    @if (roleName == "Administrator")
+                    {
+                        <td>
+                            <button class="btn btn-warning" @onclick="@(()=>navigateToEdit(item.OrderId))">Edit</button>
+                            <button class="btn btn-danger" @onclick="@(()=>navigateToApproveOrReject(item.OrderId))">Approve Or Reject</button>
+                            <button class="btn btn-danger" @onclick="@(()=>navigateToDelete(item.OrderId))">Delete</button>
+                           
                         </td>
                     }
                 </tr> 
@@ -83,14 +92,17 @@
         }
     }
 
-    private void navigateToEdit()
+    private void navigateToEdit(int id)
     {
-        navigationManager.NavigateTo("/editorder");
+        navigationManager.NavigateTo($"/editorder/{id}");
     }
-
-    private void navigateToDelete()
+    private void navigateToDelete(int id)
     {
-        navigationManager.NavigateTo("/deleteorder");
+        navigationManager.NavigateTo($"/deleteorder/{id}");
+    }
+    private void navigateToApproveOrReject(int id)
+    {
+        navigationManager.NavigateTo($"/approveorder/{id}");
     }
     private void navigateToHome()
     {

@@ -81,7 +81,7 @@
 
     private async Task SaveOrder()
     {
-        currentUser = await session.GetItemAsync<string>("UserName");
+          currentUser = await session.GetItemAsync<string>("UserName");
           token = await session.GetItemAsync<string>("authToken");
           roleName = await session.GetItemAsync<string>("RoleName");
         if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
