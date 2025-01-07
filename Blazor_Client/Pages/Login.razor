@@ -48,7 +48,7 @@
             var receivedResponse = await response.Content.ReadAsStringAsync();
             securityResponse = JsonSerializer.Deserialize<SecureResponse>(receivedResponse);
 
-            if (securityResponse.StatucCode == 500)
+            if (securityResponse?.StatucCode == 500)
             {
                 errorMessage = $"The User {user.Email} is found, but role is not assigned to this user so the use cannot be authenticated";
                 isLoginFailed = true;
@@ -60,12 +60,12 @@
                 await session.SetItemAsync("UserName", securityResponse.UserName);
                 navigationManager.NavigateTo("/");
             }
-
         }
         else
         {
             errorMessage = "Login failed. Please check your credentials.";
         }
+        this.StateHasChanged();
     }
 
     private void clear()

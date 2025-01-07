@@ -17,14 +17,16 @@
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Login
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="registeruser">
+        @if (String.IsNullOrEmpty(RoleName))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="registeruser">
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> New User
             </NavLink>
         </div>
+        }
         @if (RoleName == "Administrator")
         {
-
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="approveuser">
                     <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Approve User
@@ -86,14 +88,14 @@
         }
         @if (!String.IsNullOrEmpty(RoleName))
         {
-
-
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="logout">
                     <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Logout
                 </NavLink>
             </div>
         }
+
+       
 
     </nav>
 </div>
@@ -103,12 +105,13 @@
 
 
     private SecureResponse response = new SecureResponse();
-    string RoleName = string.Empty;
-    string UserName = string.Empty;
-    protected async override Task OnInitializedAsync()
+    string? RoleName = string.Empty;
+    string? UserName= string.Empty;
+    protected override async Task OnInitializedAsync()
     {
         RoleName = await session.GetItemAsync<string>("RoleName");
         UserName = await session.GetItemAsync<string>("UserName");
+        await Task.Delay(1000);
         this.StateHasChanged();
     }
 
@@ -119,5 +122,7 @@
     {
         collapseNavMenu = !collapseNavMenu;
     }
- 
+
+    private void StateHasChanged() { }
+
 }

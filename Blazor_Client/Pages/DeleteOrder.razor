@@ -57,7 +57,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        currentUser = await session.GetItemAsStringAsync("UserName");
+        currentUser = await session.GetItemAsync<string>("UserName");
         token = await session.GetItemAsync<string>("authToken");
         roleName = await session.GetItemAsync<string>("RoleName");
 

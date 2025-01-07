@@ -68,7 +68,7 @@
     {
         // Read the Role and Token from the session storage
 
-        var currentUser = await session.GetItemAsStringAsync("UserName");
+        var currentUser = await session.GetItemAsync<string>("UserName");
         var token = await session.GetItemAsync<string>("authToken");
         roleName = await session.GetItemAsync<string>("RoleName");
         if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))

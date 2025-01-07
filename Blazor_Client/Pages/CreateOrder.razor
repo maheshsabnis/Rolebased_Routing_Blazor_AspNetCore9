@@ -37,6 +37,13 @@
             <InputNumber @bind-Value="order.Quantity" class="form-control" />
             <ValidationMessage For="@(()=>order.Quantity)" />
         </div>
+
+        <div class="form-group">
+            <label for="Quantity">Ordered Status</label>
+            <InputText @bind-Value="order.OrderStatus" class="form-control" />
+            <ValidationMessage For="@(()=>order.OrderStatus)" />
+        </div>
+
         <div class="form-group">
             <label for="Comments">Comments</label>
             <InputTextArea @bind-Value="order.Comments" class="form-control" />
@@ -65,15 +72,22 @@
     {
        "Laptop","Mobile","Charger","Charger Cable","USB","Power Bank","Laptop Charger","Screen","Router"
     };
+
+    protected override void OnInitialized()
+    {
+        order.OrderedDate = DateOnly.FromDateTime(DateTime.Now);
+        base.OnInitialized();
+    }
+
     private async Task SaveOrder()
     {
-        currentUser = await session.GetItemAsStringAsync("UserName");
+        currentUser = await session.GetItemAsync<string>("UserName");
           token = await session.GetItemAsync<string>("authToken");
           roleName = await session.GetItemAsync<string>("RoleName");
         if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
         {
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            order.OrderStatus = "New Order";
+           
             order.IsApproved = false;
             order.CreatedBy = currentUser;
 
