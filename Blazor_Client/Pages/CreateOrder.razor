@@ -18,7 +18,7 @@
         </div>
         <div class="form-group">
             <label for="ItemName">Item Name</label>
-            <InputSelect @bind-Value="order.CustomerName" TValue="string" class="form-control">
+            <InputSelect @bind-Value="order.ItemName" TValue="string" class="form-control">
                 <option>Selected Item to Purchase....</option>
                 @foreach (var item in items)
                 {
@@ -43,8 +43,8 @@
             <ValidationMessage For="@(()=>order.Comments)" />
         </div>
         <div class="btn-group-lg">
-            <button class="btn btn-warning">Clear</button>
-            <button type="submit" class="btn btn-success">Save</button>
+            <button class="btn btn-warning" @onclick="Clear">Clear</button>
+            <button type="submit" class="btn btn-success" >Save</button>
         </div>
     </EditForm>
 
@@ -56,6 +56,9 @@
 @code {
     private Order? order = new Order();
     string currentUser = string.Empty;
+
+    string token = string.Empty;
+    string roleName = string.Empty;
     private string url = "https://localhost:7291/api/createorder";
     private ResponseObject<Order>? createOrderResponse = new ResponseObject<Order>();
     private List<string> items = new List<string>() 
@@ -65,13 +68,11 @@
     private async Task SaveOrder()
     {
         currentUser = await session.GetItemAsStringAsync("UserName");
-        // If the Current User Value is Null or Empty then Order cannot be added
-        if (String.IsNullOrEmpty(currentUser))
+          token = await session.GetItemAsync<string>("authToken");
+          roleName = await session.GetItemAsync<string>("RoleName");
+        if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
         {
-            navigationManager.NavigateTo("/accessdenied");
-        }
-        else
-        {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             order.OrderStatus = "New Order";
             order.IsApproved = false;
             order.CreatedBy = currentUser;
@@ -83,6 +84,11 @@
             }
 
         }
+        else
+        {
+            navigationManager.NavigateTo("/accessdenied");
+        }
+
     }
 
     private void Clear()

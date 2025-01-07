@@ -3,6 +3,7 @@
 @using Blazor_Client.Models
 
 @inject ISessionStorageService session
+@inject NavigationManager navigationManager
 @inject HttpClient httpClient;
 
 
@@ -42,18 +43,57 @@
                     <td>@item.UpdatedDate</td>
                     <td>@item.IsApproved</td>
                     <td>@item.Comments</td>
+                    @if (roleName == "Administrator" || roleName == "Manager")
+                    {
+                        <td>
+                            <button class="btn btn-warning" @onclick="navigateToEdit">Edit</button>
+                            <button class="btn btn-danger" @onclick="navigateToDelete">Delete</button>
+                        </td>
+                    }
                 </tr> 
             }
         </tbody>
     </table>
+    <br/>
+    <button class="btn btn-link" @onclick="navigateToHome">Home</button>
 </div>
 
 
 @code {
     private List<Order>? orders = new List<Order>();
     string url = "https://localhost:7291/api/orders";
+    string roleName = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
-        orders = await httpClient.GetFromJsonAsync<List<Order>>(url);
+        // Read the Role and Token from the session storage
+
+        var currentUser = await session.GetItemAsStringAsync("UserName");
+        var token = await session.GetItemAsync<string>("authToken");
+        roleName = await session.GetItemAsync<string>("RoleName");
+        if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            orders = await httpClient.GetFromJsonAsync<List<Order>>(url);
+        }
+        else
+        {
+            navigationManager.NavigateTo("/accessdenied");
+        }
+    }
+
+    private void navigateToEdit()
+    {
+        navigationManager.NavigateTo("/editorder");
+    }
+
+    private void navigateToDelete()
+    {
+        navigationManager.NavigateTo("/deleteorder");
+    }
+    private void navigateToHome()
+    {
+        navigationManager.NavigateTo("/");
     }
 }

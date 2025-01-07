@@ -1,0 +1,20 @@
+﻿@page "/recordnotfound"
+@inject NavigationManager navigationManager
+
+<div class="container">
+    <div class="alert alert-warning">
+        <strong>
+            The Record you are looking for is not found or the reqested Operation is failed 
+        </strong>
+    </div>
+</div>
+
+
+@code {
+    private void backList()
+    {
+        navigationManager.NavigateTo("/listorders");
+    }
+}
+
+ 

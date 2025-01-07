@@ -182,13 +182,12 @@ app.MapGet("/api/orders", async (HttpRequest request, SecurityServices serv, Sal
 app.MapGet("/api/orders/{id}", async (HttpRequest request, SecurityServices serv, SalesService sales, int id) =>
 {
     GetRequestInfo(request, serv, out string userName, out string roleName);
-    var orders = await sales.GetAsync();
-    if (orders?.Records == null)
+    var response = await sales.GetAsync(id);
+    if (response?.Record == null)
     {
         return Results.NotFound("No orders found.");
     }
-    var responseByUser = orders.Records.Where(order => order.CreatedBy?.Trim() == userName && order.OrderId == id).FirstOrDefault();
-    return Results.Ok(responseByUser);
+    return Results.Ok(response);
 }).RequireAuthorization("AdminManagerClerkPolicy");
 
 

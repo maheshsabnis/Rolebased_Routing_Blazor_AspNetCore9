@@ -1,6 +1,133 @@
-﻿@page "/editorder"
+﻿@page "/editorder/{id:int}"
+@using Blazor_Client.Models
+@using Blazored.SessionStorage
+@inject HttpClient httpClient
+@inject ISessionStorageService session;
+@inject NavigationManager navigationManager
+
 <h3>Edit Order</h3>
 
-@code {
+<div class="container">
+    <EditForm Model="@order" OnValidSubmit="@SaveOrder">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="CustomerName">Customer Name</label>
+            <InputText @bind-Value="order.CustomerName" class="form-control" />
+            <ValidationMessage For="@(()=>order.CustomerName)" />
+        </div>
+        <div class="form-group">
+            <label for="ItemName">Item Name</label>
+            <InputSelect @bind-Value="order.ItemName" TValue="string" class="form-control">
+                <option>Selected Item to Purchase....</option>
+                @foreach (var item in items)
+                {
+                    <option value="@item">@item</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(()=>order.ItemName)" />
+        </div>
+        <div class="form-group">
+            <label for="OrderedDate">Ordered Date</label>
+            <InputDate @bind-Value="order.OrderedDate" class="form-control" />
+            <ValidationMessage For="@(()=>order.OrderedDate)" />
+        </div>
+        <div class="form-group">
+            <label for="Quantity">Ordered Quantity</label>
+            <InputNumber @bind-Value="order.Quantity" class="form-control" />
+            <ValidationMessage For="@(()=>order.Quantity)" />
+        </div>
+        <div class="form-group">
+            <label for="Comments">Comments</label>
+            <InputTextArea @bind-Value="order.Comments" class="form-control" />
+            <ValidationMessage For="@(()=>order.Comments)" />
+        </div>
+        <div class="btn-group-lg">
+            <button class="btn btn-warning" @onclick="Cancel">Cancel</button>
+            <button type="submit" class="btn btn-success" >Save</button>
+        </div>
+    </EditForm>
 
+</div>
+
+
+
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    private Order? order = new Order();
+    string currentUser = string.Empty;
+    string token = string.Empty;
+    string roleName = string.Empty;
+    private string url = "https://localhost:7291/api/updateorder";
+
+    private List<string> items = new List<string>()
+    {
+       "Laptop","Mobile","Charger","Charger Cable","USB","Power Bank","Laptop Charger","Screen","Router"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await session.GetItemAsStringAsync("UserName");
+        token = await session.GetItemAsync<string>("authToken");
+        roleName = await session.GetItemAsync<string>("RoleName");
+
+        if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            order = await httpClient.GetFromJsonAsync<Order>($"https://localhost:7291/api/orders/{id}");
+
+            if (order == null)
+            {
+                navigationManager.NavigateTo("/recordnotfound");
+            }
+        }
+        else
+        { 
+            navigationManager.NavigateTo("/accessdenied");
+        }
+
+    }
+
+
+
+    private async Task SaveOrder()
+    {
+     
+        if (!string.IsNullOrEmpty(token) && !String.IsNullOrEmpty(currentUser) && !String.IsNullOrEmpty(roleName))
+        {
+
+            if (roleName == "Administrator" || roleName == "Manager")
+            { 
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                order.OrderStatus = "Order is Edited";
+                order.IsApproved = false;
+                order.UpdatedBy = currentUser;
+
+
+                var response = await httpClient.PutAsJsonAsync($"{url}/{id}", order);
+                if (response.IsSuccessStatusCode)
+                {
+                    navigationManager.NavigateTo("/listorders");
+                }
+            }
+            else
+            {
+                navigationManager.NavigateTo("/accessdenied");
+            }
+            
+
+        }
+        else
+        {
+            navigationManager.NavigateTo("/accessdenied");
+        }
+
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("/listorders");
+    }
 }
