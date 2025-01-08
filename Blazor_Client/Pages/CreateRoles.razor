@@ -1,5 +1,10 @@
 ﻿@page "/createrole"
 @using Blazor_Client.Models
+@using Blazor_Client.Models;
+@using Blazored.SessionStorage
+@inject HttpClient httpClient;
+@inject NavigationManager navigationManager
+@inject ISessionStorageService session;
 
 <h3>Create Roles</h3>
 
@@ -9,12 +14,57 @@
         <InputText @bind-Value="role.RoleName" class="form-control"/>
     </div>
     <div class="btn-group-lg">
-        <button class="btn btn-warning">Clear</button>
-        <button class="btn btn-success">Save</button>
+        <button class="btn btn-warning" @onclick="Clear">Clear</button>
+        <button class="btn btn-success" @onclick="CreateRole">Save</button>
+    </div>
+    <hr/>
+    <div class="alert alert-warning">
+        <strong>
+            @secureResponse.Message
+        </strong>
     </div>
 </div>
 
 
 @code {
     private RoleData role = new RoleData();
+    SecureResponse? secureResponse = new SecureResponse();
+    string url = "https://localhost:7291/api/createrole";
+    string token = string.Empty;
+    string RoleName = string.Empty;
+
+
+    private async Task CreateRole()
+    { 
+        try
+        {
+            token = await session.GetItemAsync<string>("authToken");
+            RoleName = await session.GetItemAsync<string>("RoleName");
+            if (RoleName == "Administrator")
+            {
+                if (!string.IsNullOrEmpty(token))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await httpClient.PostAsJsonAsync(url, role);
+                if (response.IsSuccessStatusCode)
+                    secureResponse = await response.Content.ReadFromJsonAsync<SecureResponse>();
+            }
+            else
+            {
+                navigationManager.NavigateTo("/accessdenied");
+            }
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    private void Clear()
+    {
+        role = new RoleData();
+    }
+
 }
